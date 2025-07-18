@@ -17,9 +17,9 @@ jobs:
       # Dias sem push para considerar inativo
       THRESHOLD_DAYS: '800'
       # Lista de nomes exatos a pular (vírgula separada)
-      EXCLUDE_NAMES: 'kube-new-DevOpsPro,common-scripts,ci-config'
+      EXCLUDE_NAMES: 'Velero-Backup-and-Restore-AKS,Udemy-DevOps-Mao-na-massa,redis-app'
       # Regex para pular nome de repo
-      EXCLUDE_PATTERN: 'Projetos'
+      EXCLUDE_PATTERN: 'DevOpsPro'
 
     steps:
       - name: Install GitHub CLI
