@@ -11,9 +11,9 @@ permissions:
 
 env:
   # Lista de nomes exatos a pular (separe por vírgula, sem espaços)
-  EXCLUDE_NAMES: "infra-template,common-scripts,ci-config"
+  EXCLUDE_NAMES: "kube-new-DevOpsPro,common-scripts,ci-config"
   # Padrões (regex) a pular — e.g. qualquer repo que tenha "template" no nome
-  EXCLUDE_PATTERN: "template"
+  EXCLUDE_PATTERN: "Projetos"
 
 jobs:
   archive:
@@ -23,7 +23,7 @@ jobs:
       - name: Configure GitHub CLI
         uses: cli/cli@v2
         with:
-          token: ${{ secrets.ORG_PAT }}
+          token: ${{ secrets.USER_PAT }}
 
       - name: Fetch inactive repos
         id: list
