@@ -57,10 +57,12 @@ jobs:
 
           echo "inactive_count=$(wc -l < all-inactive.txt)" >> $GITHUB_OUTPUT
 
-      - name: Show how many repos to archive
+      - name: Show inactive repos
         run: |
-          echo "Found ${{ steps.list.outputs.inactive_count }} inactive repos after exceptions."
-
+          echo "Found ${{ steps.list.outputs.inactive_count }} inactive repos after exceptions:"
+          echo "———————————————————————"
+          cat all-inactive.txt
+          echo "———————————————————————"
       # Para ativar o arquivamento, descomente este passo:
       # - name: Archive each repo
       #   if: steps.list.outputs.inactive_count != '0'
