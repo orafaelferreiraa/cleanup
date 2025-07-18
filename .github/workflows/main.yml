@@ -1,0 +1,68 @@
+# .github/workflows/archive-inactive-repos.yml
+name: Archive inactive repos with exceptions
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # Lista de nomes exatos a pular (separe por vírgula, sem espaços)
+  EXCLUDE_NAMES: "infra-template,common-scripts,ci-config"
+  # Padrões (regex) a pular — e.g. qualquer repo que tenha "template" no nome
+  EXCLUDE_PATTERN: "template"
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Configure GitHub CLI
+        uses: cli/cli@v2
+        with:
+          token: ${{ secrets.ORG_PAT }}
+
+      - name: Fetch inactive repos
+        id: list
+        run: |
+          gh api /orgs/${{ github.repository_owner }}/repos --paginate \
+            -H "Accept: application/vnd.github+json" \
+            -q '.[] 
+                | select(
+                    ((now - (.pushed_at|fromdateiso8601)) / 86400) > 360
+                    and .archived==false
+                  ) 
+                | .name' \
+            > all-inactive.txt
+
+          # 1) Remove nomes exatos
+          if [ -n "${EXCLUDE_NAMES}" ]; then
+            PATTERN_EXACT=$(echo "${EXCLUDE_NAMES}" | sed 's/,/\\|/g')
+            grep -Ev "^(${PATTERN_EXACT})$" all-inactive.txt > tmp && mv tmp all-inactive.txt
+          fi
+
+          # 2) Remove padrões regex
+          if [ -n "${EXCLUDE_PATTERN}" ]; then
+            grep -Ev "${EXCLUDE_PATTERN}" all-inactive.txt > tmp && mv tmp all-inactive.txt
+          fi
+
+          echo "::set-output name=count::$(wc -l < all-inactive.txt)"
+
+      - name: Show how many repos to archive
+        run: echo "Found ${{ steps.list.outputs.count }} inactive repos after exceptions."
+
+#      - name: Archive each repo
+ #       if: steps.list.outputs.count != '0'
+  #      run: |
+   #       while read repo; do
+    #        echo "Archiving $repo..."
+     #       gh api \
+      #        -X PATCH /repos/${{ github.repository_owner }}/$repo \
+       #       -f archived=true
+        #  done < all-inactive.txt
+
+  #    - name: Done
+   #     run: echo "Archive run complete."
