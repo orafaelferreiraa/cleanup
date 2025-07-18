@@ -44,10 +44,12 @@ jobs:
                 | .name' \
             > all-inactive.txt
 
-          # Remove nomes exatos
+          # Remove nomes exatos (exclusão linha a linha)
           if [ -n "${EXCLUDE_NAMES}" ]; then
-            PATTERN_EXACT=$(echo "${EXCLUDE_NAMES}" | sed 's/,/\\|/g')
-            grep -Ev "^(${PATTERN_EXACT})$" all-inactive.txt > tmp && mv tmp all-inactive.txt
+            IFS=',' read -ra SKIP <<< "${EXCLUDE_NAMES}"
+            for repo in "${SKIP[@]}"; do
+              grep -vFx "$repo" all-inactive.txt > tmp && mv tmp all-inactive.txt
+            done
           fi
 
           # Remove padrões regex
