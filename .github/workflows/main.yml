@@ -15,7 +15,7 @@ jobs:
 
     env:
       # Dias sem push para considerar inativo
-      THRESHOLD_DAYS: '1440'
+      THRESHOLD_DAYS: '1000'
       # Lista de nomes exatos a pular (vírgula separada)
       EXCLUDE_NAMES: 'kube-new-DevOpsPro,common-scripts,ci-config'
       # Regex para pular nome de repo
