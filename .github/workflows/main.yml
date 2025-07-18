@@ -9,21 +9,27 @@ on:
 permissions:
   contents: write
 
-env:
-  # Lista de nomes exatos a pular (separe por vírgula, sem espaços)
-  EXCLUDE_NAMES: "kube-new-DevOpsPro,common-scripts,ci-config"
-  # Padrões (regex) a pular — e.g. qualquer repo que tenha "template" no nome
-  EXCLUDE_PATTERN: "Projetos"
-
 jobs:
   archive:
-    runs-on: ubuntu-latest
-    steps:
+    runs-on: ubuntu-24.04
 
-      - name: Configure GitHub CLI
-        uses: cli/cli@v2
-        with:
-          token: ${{ secrets.USER_PAT }}
+    env:
+      # Dias sem push para considerar inativo
+      THRESHOLD_DAYS: '360'
+      # Lista de nomes exatos a pular (vírgula separada)
+      EXCLUDE_NAMES: 'kube-new-DevOpsPro,common-scripts,ci-config'
+      # Regex para pular nome de repo
+      EXCLUDE_PATTERN: 'Projetos'
+
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.USER_PAT }}" | gh auth login --with-token
 
       - name: Fetch inactive repos
         id: list
@@ -32,37 +38,34 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -q '.[] 
                 | select(
-                    ((now - (.pushed_at|fromdateiso8601)) / 86400) > 360
+                    ((now - (.pushed_at|fromdateiso8601)) / 86400) > '"${THRESHOLD_DAYS}"' 
                     and .archived==false
                   ) 
                 | .name' \
             > all-inactive.txt
 
-          # 1) Remove nomes exatos
+          # Remove nomes exatos
           if [ -n "${EXCLUDE_NAMES}" ]; then
             PATTERN_EXACT=$(echo "${EXCLUDE_NAMES}" | sed 's/,/\\|/g')
             grep -Ev "^(${PATTERN_EXACT})$" all-inactive.txt > tmp && mv tmp all-inactive.txt
           fi
 
-          # 2) Remove padrões regex
+          # Remove padrões regex
           if [ -n "${EXCLUDE_PATTERN}" ]; then
             grep -Ev "${EXCLUDE_PATTERN}" all-inactive.txt > tmp && mv tmp all-inactive.txt
           fi
 
-          echo "::set-output name=count::$(wc -l < all-inactive.txt)"
+          echo "inactive_count=$(wc -l < all-inactive.txt)" >> $GITHUB_OUTPUT
 
       - name: Show how many repos to archive
-        run: echo "Found ${{ steps.list.outputs.count }} inactive repos after exceptions."
+        run: |
+          echo "Found ${{ steps.list.outputs.inactive_count }} inactive repos after exceptions."
 
-#      - name: Archive each repo
- #       if: steps.list.outputs.count != '0'
-  #      run: |
-   #       while read repo; do
-    #        echo "Archiving $repo..."
-     #       gh api \
-      #        -X PATCH /repos/${{ github.repository_owner }}/$repo \
-       #       -f archived=true
-        #  done < all-inactive.txt
-
-  #    - name: Done
-   #     run: echo "Archive run complete."
+      # Para ativar o arquivamento, descomente este passo:
+      # - name: Archive each repo
+      #   if: steps.list.outputs.inactive_count != '0'
+      #   run: |
+      #     while read repo; do
+      #       echo "Archiving $repo..."
+      #       gh api -X PATCH /repos/${{ github.repository_owner }}/$repo -f archived=true
+      #     done < all-inactive.txt
