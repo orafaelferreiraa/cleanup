@@ -52,9 +52,12 @@ jobs:
             done
           fi
 
-          # Remove padrões regex
+          # Remove padrões regex múltiplos
           if [ -n "${EXCLUDE_PATTERN}" ]; then
-            grep -Ev "${EXCLUDE_PATTERN}" all-inactive.txt > tmp && mv tmp all-inactive.txt
+            # converte "DevOpsPro, Projetos" em "DevOpsPro|Projetos"
+            IFS=',' read -ra PATTERNS <<< "${EXCLUDE_PATTERN}"
+            REGEX=$(printf '|%s' "${PATTERNS[@]}" | sed 's/^|//;s/ //g')
+            grep -Ev "${REGEX}" all-inactive.txt > tmp && mv tmp all-inactive.txt
           fi
 
           # Define outputs
