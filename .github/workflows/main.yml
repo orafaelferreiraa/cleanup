@@ -74,11 +74,10 @@ jobs:
             echo "- $repo"
           done
 
-      # Para ativar o arquivamento, descomente este passo:
-      # - name: Archive each repo
-      #   if: steps.list.outputs.inactive_count != '0'
-      #   run: |
-      #     while read repo; do
-      #       echo "Archiving $repo..."
-      #       gh api -X PATCH /repos/${{ github.repository_owner }}/$repo -f archived=true
-      #     done < all-inactive.txt
+      - name: Archive each repo
+        if: steps.list.outputs.inactive_count != '0'
+        run: |
+          while read repo; do
+            echo "Archiving $repo..."
+            gh api -X PATCH /repos/${{ github.repository_owner }}/$repo -f archived=true
+          done < all-inactive.txt
