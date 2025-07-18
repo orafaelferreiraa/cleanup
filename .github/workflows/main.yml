@@ -19,7 +19,7 @@ jobs:
       # Lista de nomes exatos a pular (vírgula separada)
       EXCLUDE_NAMES: 'Velero-Backup-and-Restore-AKS,Udemy-DevOps-Mao-na-massa,redis-app'
       # Regex para pular nome de repo
-      EXCLUDE_PATTERN: 'DevOpsPro'
+      EXCLUDE_PATTERN: 'DevOpsPro, Projetos'
 
     steps:
       - name: Install GitHub CLI
