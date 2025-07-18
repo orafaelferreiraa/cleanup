@@ -34,7 +34,7 @@ jobs:
       - name: Fetch inactive repos
         id: list
         run: |
-          gh api /orgs/${{ github.repository_owner }}/repos --paginate \
+          gh api /user/repos --paginate \
             -H "Accept: application/vnd.github+json" \
             -q '.[] 
                 | select(
